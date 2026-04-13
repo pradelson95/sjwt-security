@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SJWT vs JWT Normal</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
+        .container { display: flex; gap: 20px; justify-content: center; }
+        .card { background: #2d2d2d; padding: 20px; border-radius: 12px; width: 45%; border: 1px solid #444; }
+        .token-box { background: #111; padding: 10px; border-radius: 5px; word-break: break-all; font-family: monospace; color: #00ff00; margin: 10px 0; border: 1px solid #333; }
+        .decoded-box { background: #222; padding: 10px; border-radius: 5px; color: #ffcc00; min-height: 100px; white-space: pre-wrap; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
+        .tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+        .tag-normal { background: #ff4444; }
+        .tag-sjwt { background: #00c851; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Laboratorio de Autenticación</h1>
+    <button onclick="getTokens()" style="margin-bottom: 20px; font-size: 1.2rem;">GENERAR TOKENS</button>
+
+    <div class="container">
+        <div class="card">
+            <span class="tag tag-normal">JWT ESTÁNDAR (HS256)</span>
+            <p>Token generado:</p>
+            <div id="jwt-token" class="token-box">Esperando...</div>
+            <p>Lo que cualquier web (o jwt.io) puede leer:</p>
+            <div id="jwt-decoded" class="decoded-box">Nadie ha decodificado nada aún.</div>
+        </div>
+
+        <div class="card">
+            <span class="tag tag-sjwt">TU LIBRERÍA SJWT (AES-GCM)</span>
+            <p>Token generado:</p>
+            <div id="sjwt-token" class="token-box">Esperando...</div>
+            <p>Lo que se ve al intentar decodificar:</p>
+            <div id="sjwt-decoded" class="decoded-box">Intenta leer esto...</div>
+        </div>
+    </div>
+
+    <script>
+        function decodeB64(str) {
+            try {
+                // El JWT normal tiene 3 partes separadas por puntos. La segunda es el payload.
+                const base64Url = str.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                return JSON.stringify(JSON.parse(window.atob(base64)), null, 2);
+            } catch (e) {
+                return "❌ ERROR: No se puede leer como JSON (Esto es bueno para SJWT)";
+            }
+        }
+
+        async function getTokens() {
+            const res = await fetch('http://localhost:8000/generate-tokens');
+            const data = await res.json();
+
+            // Mostrar JWT Normal
+            document.getElementById('jwt-token').innerText = data.normal_jwt;
+            document.getElementById('jwt-decoded').innerText = decodeB64(data.normal_jwt);
+
+            // Mostrar Tu SJWT
+            document.getElementById('sjwt-token').innerText = data.sjwt_token;
+            document.getElementById('sjwt-decoded').innerText = decodeB64(data.sjwt_token);
+        }
+    </script>
+</body>
+</html>
